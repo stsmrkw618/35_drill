@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStickers, type Sticker } from "@/lib/stickers";
+import { characterImages } from "@/lib/gameData";
 
 const gameLabels: Record<string, string> = {
   moji: "もじを えらぼう",
@@ -214,6 +215,11 @@ export default function StickersPage() {
                             src={sticker.imageUrl}
                             alt=""
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              const fallback = characterImages[Math.floor(Math.random() * characterImages.length)];
+                              if (img.src !== fallback) img.src = fallback;
+                            }}
                           />
                           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 via-transparent to-transparent pointer-events-none" />
                         </div>
