@@ -13,30 +13,114 @@ const gameLabels: Record<string, string> = {
   ookii: "おおきいのどっち？",
 };
 
-// お花畑の台紙デコレーション（固定位置）
-const gardenDecorations = [
-  { emoji: "\u{1F337}", top: "8%", left: "5%" },
-  { emoji: "\u{1F33B}", top: "15%", right: "8%" },
-  { emoji: "\u{1F33C}", top: "35%", left: "3%" },
-  { emoji: "\u{1F33A}", top: "50%", right: "4%" },
-  { emoji: "\u{1F337}", top: "65%", left: "6%" },
-  { emoji: "\u{1F33B}", top: "80%", right: "6%" },
-  { emoji: "\u{1F33C}", top: "90%", left: "4%" },
-  { emoji: "\u{1F98B}", top: "25%", left: "8%" },
-  { emoji: "\u{1F41D}", top: "55%", right: "9%" },
-  { emoji: "\u{1F98B}", top: "75%", right: "3%" },
-];
+const SLOTS_PER_PAGE = 8;
 
-const TOTAL_SLOTS = 8;
+// ページごとのテーマ定義
+const pageThemes = [
+  {
+    name: "おはなばたけ",
+    bg: "from-green-50 via-yellow-50 to-pink-50",
+    borderColor: "border-green-200",
+    completedMsg: "おはなばたけ かんせい！",
+    emptyEmojis: ["\u{1F337}", "\u{1F33B}", "\u{1F33C}", "\u{1F33A}"],
+    decos: [
+      { emoji: "\u{1F337}", top: "12%", left: "4%" },
+      { emoji: "\u{1F33B}", top: "18%", right: "5%" },
+      { emoji: "\u{1F33C}", top: "45%", left: "3%" },
+      { emoji: "\u{1F33A}", top: "55%", right: "4%" },
+      { emoji: "\u{1F98B}", top: "30%", left: "7%" },
+      { emoji: "\u{1F41D}", top: "70%", right: "6%" },
+    ],
+  },
+  {
+    name: "うみのなか",
+    bg: "from-cyan-50 via-blue-50 to-sky-100",
+    borderColor: "border-cyan-200",
+    completedMsg: "うみのなか かんせい！",
+    emptyEmojis: ["\u{1F41F}", "\u{1F420}", "\u{1F419}", "\u{1F42C}"],
+    decos: [
+      { emoji: "\u{1F41F}", top: "10%", left: "5%" },
+      { emoji: "\u{1F420}", top: "20%", right: "4%" },
+      { emoji: "\u{1F419}", top: "50%", left: "3%" },
+      { emoji: "\u{1F42C}", top: "60%", right: "5%" },
+      { emoji: "\u{1F30A}", top: "35%", left: "6%" },
+      { emoji: "\u{1FAB8}", top: "75%", right: "7%" },
+    ],
+  },
+  {
+    name: "ほしぞら",
+    bg: "from-indigo-100 via-purple-50 to-pink-50",
+    borderColor: "border-indigo-200",
+    completedMsg: "ほしぞら かんせい！",
+    emptyEmojis: ["\u2B50", "\u{1F31F}", "\u{1FA90}", "\u{1F319}"],
+    decos: [
+      { emoji: "\u2B50", top: "8%", left: "6%" },
+      { emoji: "\u{1F31F}", top: "15%", right: "4%" },
+      { emoji: "\u{1FA90}", top: "40%", left: "3%" },
+      { emoji: "\u{1F319}", top: "55%", right: "5%" },
+      { emoji: "\u2B50", top: "70%", left: "5%" },
+      { emoji: "\u{1F31F}", top: "80%", right: "6%" },
+    ],
+  },
+  {
+    name: "どうぶつえん",
+    bg: "from-amber-50 via-lime-50 to-green-50",
+    borderColor: "border-amber-200",
+    completedMsg: "どうぶつえん かんせい！",
+    emptyEmojis: ["\u{1F981}", "\u{1F418}", "\u{1F992}", "\u{1F43C}"],
+    decos: [
+      { emoji: "\u{1F333}", top: "10%", left: "4%" },
+      { emoji: "\u{1F333}", top: "15%", right: "5%" },
+      { emoji: "\u{1F43F}\uFE0F", top: "40%", left: "6%" },
+      { emoji: "\u{1F99C}", top: "50%", right: "4%" },
+      { emoji: "\u{1F333}", top: "70%", left: "3%" },
+      { emoji: "\u{1F333}", top: "75%", right: "6%" },
+    ],
+  },
+  {
+    name: "おかしのくに",
+    bg: "from-pink-50 via-rose-50 to-fuchsia-50",
+    borderColor: "border-pink-200",
+    completedMsg: "おかしのくに かんせい！",
+    emptyEmojis: ["\u{1F36D}", "\u{1F370}", "\u{1F369}", "\u{1F36A}"],
+    decos: [
+      { emoji: "\u{1F36D}", top: "10%", left: "5%" },
+      { emoji: "\u{1F370}", top: "18%", right: "4%" },
+      { emoji: "\u{1F36B}", top: "45%", left: "3%" },
+      { emoji: "\u{1F369}", top: "55%", right: "5%" },
+      { emoji: "\u{1F382}", top: "30%", left: "7%" },
+      { emoji: "\u{1F36A}", top: "72%", right: "6%" },
+    ],
+  },
+];
 
 export default function StickersPage() {
   const [stickers, setStickers] = useState<Sticker[]>([]);
+  const [pageIndex, setPageIndex] = useState(0);
 
   useEffect(() => {
-    setStickers(getStickers());
+    const s = getStickers();
+    setStickers(s);
+    // 最新のページ（最後に埋めているページ）を初期表示
+    const lastPage = Math.max(0, Math.ceil(s.length / SLOTS_PER_PAGE) - 1);
+    setPageIndex(lastPage);
   }, []);
 
-  const filledCount = Math.min(stickers.length, TOTAL_SLOTS);
+  const totalPages = Math.max(1, Math.ceil(stickers.length / SLOTS_PER_PAGE));
+  // 次のページは、現ページが埋まっていれば解放
+  const unlockedPages = Math.min(
+    pageThemes.length,
+    Math.floor(stickers.length / SLOTS_PER_PAGE) + 1
+  );
+
+  const currentPage = Math.min(pageIndex, unlockedPages - 1);
+  const theme = pageThemes[currentPage % pageThemes.length];
+  const pageStickers = stickers.slice(
+    currentPage * SLOTS_PER_PAGE,
+    (currentPage + 1) * SLOTS_PER_PAGE
+  );
+  const isPageComplete = pageStickers.length >= SLOTS_PER_PAGE;
+  const remaining = SLOTS_PER_PAGE - pageStickers.length;
 
   return (
     <main className="min-h-dvh flex flex-col">
@@ -57,14 +141,14 @@ export default function StickersPage() {
       </header>
 
       {/* Sticker book */}
-      <div className="flex-1 overflow-y-auto relative">
-        {/* お花畑の背景 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-green-50 via-yellow-50 to-pink-50 pointer-events-none" />
+      <div className="flex-1 overflow-hidden relative flex flex-col">
+        {/* テーマ背景 */}
+        <div className={`absolute inset-0 bg-gradient-to-b ${theme.bg} pointer-events-none transition-all duration-500`} />
 
-        {/* 背景の花デコレーション */}
-        {gardenDecorations.map((d, i) => (
+        {/* 背景デコレーション */}
+        {theme.decos.map((d, i) => (
           <span
-            key={i}
+            key={`${currentPage}-${i}`}
             className="absolute text-3xl opacity-20 pointer-events-none animate-float"
             style={{
               top: d.top,
@@ -77,9 +161,9 @@ export default function StickersPage() {
           </span>
         ))}
 
-        <div className="relative p-4">
+        <div className="relative flex-1 flex flex-col p-4">
           {stickers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
+            <div className="flex flex-col items-center justify-center flex-1 gap-6 text-center">
               <span className="text-8xl">{"\u{1F33B}"}</span>
               <p className="text-3xl text-gray-400 font-bold">
                 まだ シールが ないよ
@@ -98,27 +182,31 @@ export default function StickersPage() {
             </div>
           ) : (
             <>
-              {/* 進捗メッセージ */}
-              <div className="text-center mb-4">
-                {filledCount >= TOTAL_SLOTS ? (
+              {/* ページタイトルと進捗 */}
+              <div className="text-center mb-3">
+                <p className="text-lg font-bold text-gray-400 mb-1">
+                  {currentPage + 1}ページめ
+                </p>
+                {isPageComplete ? (
                   <p className="text-2xl font-black text-pink-500 animate-bounce-in">
-                    {"\u{1F389}"} おはなばたけ かんせい！ {"\u{1F389}"}
+                    {"\u{1F389}"} {theme.completedMsg} {"\u{1F389}"}
                   </p>
                 ) : (
                   <p className="text-xl font-bold text-gray-400">
-                    あと {TOTAL_SLOTS - filledCount}まいで おはなばたけ かんせい！
+                    あと {remaining}まいで {theme.name} かんせい！
                   </p>
                 )}
               </div>
 
               {/* 台紙グリッド */}
-              <div className="grid grid-cols-4 gap-4 max-w-2xl mx-auto">
-                {Array.from({ length: TOTAL_SLOTS }).map((_, i) => {
-                  const sticker = stickers[i];
+              <div className="grid grid-cols-4 gap-4 max-w-2xl mx-auto flex-1 content-center">
+                {Array.from({ length: SLOTS_PER_PAGE }).map((_, i) => {
+                  const sticker = pageStickers[i];
                   if (sticker) {
                     return (
                       <div key={sticker.id} className="flex flex-col items-center gap-1">
-                        <div className="w-full aspect-square rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-pink-100 to-yellow-100 relative animate-fade-in-up"
+                        <div
+                          className="w-full aspect-square rounded-2xl overflow-hidden border-4 border-white shadow-lg bg-gradient-to-br from-pink-100 to-yellow-100 relative animate-fade-in-up"
                           style={{ animationDelay: `${i * 0.05}s` }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -127,7 +215,6 @@ export default function StickersPage() {
                             alt=""
                             className="w-full h-full object-cover"
                           />
-                          {/* Glossy effect */}
                           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/30 via-transparent to-transparent pointer-events-none" />
                         </div>
                         <span className="text-xs text-gray-400 font-bold truncate w-full text-center">
@@ -138,9 +225,9 @@ export default function StickersPage() {
                   }
                   return (
                     <div key={`empty-${i}`} className="flex flex-col items-center gap-1">
-                      <div className="w-full aspect-square rounded-2xl border-4 border-dashed border-green-200 bg-white/50 flex items-center justify-center">
+                      <div className={`w-full aspect-square rounded-2xl border-4 border-dashed ${theme.borderColor} bg-white/50 flex items-center justify-center`}>
                         <span className="text-4xl opacity-30">
-                          {["\u{1F337}", "\u{1F33B}", "\u{1F33C}", "\u{1F33A}"][i % 4]}
+                          {theme.emptyEmojis[i % theme.emptyEmojis.length]}
                         </span>
                       </div>
                       <span className="text-xs text-transparent">.</span>
@@ -149,11 +236,49 @@ export default function StickersPage() {
                 })}
               </div>
 
-              {/* もっと集めるボタン */}
-              <div className="flex justify-center mt-6 pb-4">
+              {/* ページ切り替え＋ボタン */}
+              <div className="flex items-center justify-center gap-6 mt-3 pb-2">
+                <button
+                  onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                  disabled={currentPage <= 0}
+                  className={`text-4xl bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
+                    currentPage <= 0 ? "opacity-30" : ""
+                  }`}
+                >
+                  {"\u2190"}
+                </button>
+
+                {/* ページドット */}
+                <div className="flex gap-2">
+                  {Array.from({ length: unlockedPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPageIndex(i)}
+                      className={`w-4 h-4 rounded-full transition-all ${
+                        i === currentPage
+                          ? "bg-orange-400 scale-125"
+                          : "bg-gray-300"
+                      }`}
+                    />
+                  ))}
+                  {unlockedPages < pageThemes.length && (
+                    <span className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] text-gray-400">?</span>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setPageIndex((p) => Math.min(unlockedPages - 1, p + 1))}
+                  disabled={currentPage >= unlockedPages - 1}
+                  className={`text-4xl bg-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${
+                    currentPage >= unlockedPages - 1 ? "opacity-30" : ""
+                  }`}
+                >
+                  {"\u2192"}
+                </button>
+
                 <Link
                   href="/"
-                  className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-2xl font-black py-4 px-10 rounded-full shadow-lg active:scale-95 transition-transform"
+                  className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xl font-black py-3 px-8 rounded-full shadow-lg active:scale-95 transition-transform ml-4"
                 >
                   もっと あつめる！
                 </Link>
