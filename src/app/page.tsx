@@ -4,15 +4,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { characterImages } from "@/lib/gameData";
 import { playBgm, resumeAudio } from "@/lib/sounds";
+import { getStickerCount } from "@/lib/stickers";
 
 const decorChars = [0, 3, 8, 10, 14];
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [bgmStarted, setBgmStarted] = useState(false);
+  const [stickerCount, setStickerCount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
+    setStickerCount(getStickerCount());
   }, []);
 
   const startBgm = () => {
@@ -48,7 +51,7 @@ export default function HomePage() {
         ))}
 
       {/* Title */}
-      <div className="text-center mb-12 animate-slide-up">
+      <div className="text-center mb-10 animate-slide-up">
         <h1 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-sky-500 drop-shadow-sm leading-tight">
           おべんきょう
           <br />
@@ -60,7 +63,7 @@ export default function HomePage() {
       </div>
 
       {/* Category buttons */}
-      <div className="flex flex-col sm:flex-row gap-8 w-full max-w-2xl">
+      <div className="flex flex-col sm:flex-row gap-6 w-full max-w-2xl">
         <Link
           href="/kokugo"
           className="flex-1 bg-gradient-to-br from-pink-400 to-rose-500 text-white rounded-3xl p-10 shadow-xl active:scale-95 transition-transform flex flex-col items-center gap-4 hover:shadow-2xl"
@@ -87,6 +90,20 @@ export default function HomePage() {
           </span>
         </Link>
       </div>
+
+      {/* Sticker book button */}
+      <Link
+        href="/stickers"
+        className="mt-8 bg-gradient-to-br from-yellow-400 to-orange-400 text-white rounded-full py-4 px-10 shadow-xl active:scale-95 transition-transform flex items-center gap-3 hover:shadow-2xl"
+      >
+        <span className="text-4xl">{"\u2B50"}</span>
+        <span className="text-3xl font-black">シールちょう</span>
+        {mounted && stickerCount > 0 && (
+          <span className="bg-white text-orange-500 font-black text-2xl rounded-full w-10 h-10 flex items-center justify-center ml-1">
+            {stickerCount}
+          </span>
+        )}
+      </Link>
     </main>
   );
 }

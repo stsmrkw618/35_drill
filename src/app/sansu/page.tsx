@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import CharacterPopup from "@/components/CharacterPopup";
+import StickerAward from "@/components/StickerAward";
 import {
   kazoeQuestions,
   tashizanQuestions,
@@ -11,6 +12,7 @@ import {
   characterImages,
 } from "@/lib/gameData";
 import { playCorrect, playWrong, playComplete, playBgm } from "@/lib/sounds";
+import { addSticker, type Sticker } from "@/lib/stickers";
 
 type GameType = "kazoe" | "tashizan" | "ookii";
 
@@ -38,6 +40,7 @@ export default function SansuPage() {
   const [showPopup, setShowPopup] = useState(false);
   const [shakeId, setShakeId] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [awardedSticker, setAwardedSticker] = useState<Sticker | null>(null);
 
   const total = getTotal(game);
 
@@ -48,6 +51,7 @@ export default function SansuPage() {
     setShowPopup(false);
     setShakeId(null);
     setCompleted(false);
+    setAwardedSticker(null);
   };
 
   useEffect(() => {
@@ -64,11 +68,12 @@ export default function SansuPage() {
     setShowPopup(false);
     if (qIndex + 1 >= total) {
       playComplete();
-      setCompleted(true);
+      const sticker = addSticker(game);
+      setAwardedSticker(sticker);
     } else {
       setQIndex((i) => i + 1);
     }
-  }, [qIndex, total]);
+  }, [qIndex, total, game]);
 
   const handleWrong = (id: string) => {
     playWrong();
@@ -147,6 +152,13 @@ export default function SansuPage() {
       </div>
 
       <CharacterPopup show={showPopup} onClose={handlePopupClose} />
+      <StickerAward
+        sticker={awardedSticker}
+        onClose={() => {
+          setAwardedSticker(null);
+          setCompleted(true);
+        }}
+      />
     </main>
   );
 }
@@ -378,18 +390,26 @@ function CompletionScreen({
             ? "\u{1F31F}\u{1F31F}"
             : "\u{1F4AA}"}
       </div>
-      <div className="flex gap-4 mt-4">
-        <button
-          onClick={onRetry}
-          className="bg-gradient-to-r from-sky-400 to-blue-500 text-white text-3xl font-black py-5 px-12 rounded-full shadow-lg active:scale-95 transition-transform"
-        >
-          もういっかい
-        </button>
+      <div className="flex flex-col items-center gap-4 mt-4">
+        <div className="flex gap-4">
+          <button
+            onClick={onRetry}
+            className="bg-gradient-to-r from-sky-400 to-blue-500 text-white text-3xl font-black py-5 px-12 rounded-full shadow-lg active:scale-95 transition-transform"
+          >
+            もういっかい
+          </button>
+          <Link
+            href="/"
+            className="bg-white text-sky-500 text-3xl font-black py-5 px-12 rounded-full shadow-lg active:scale-95 transition-transform border-2 border-sky-300"
+          >
+            もどる
+          </Link>
+        </div>
         <Link
-          href="/"
-          className="bg-white text-sky-500 text-3xl font-black py-5 px-12 rounded-full shadow-lg active:scale-95 transition-transform border-2 border-sky-300"
+          href="/stickers"
+          className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-2xl font-black py-3 px-8 rounded-full shadow-lg active:scale-95 transition-transform flex items-center gap-2"
         >
-          もどる
+          {"\u2B50"} シールちょうを みる
         </Link>
       </div>
     </div>
