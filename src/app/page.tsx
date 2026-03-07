@@ -69,7 +69,7 @@ export default function HomePage() {
           <span className="text-8xl">
             {"\u{1F4D6}"}
           </span>
-          <span className="text-5xl font-black tracking-wider">こくご</span>
+          <span className="text-5xl font-black tracking-wider">もじ</span>
           <span className="text-xl opacity-80">
             もじ・ことば
           </span>
@@ -82,7 +82,7 @@ export default function HomePage() {
           <span className="text-8xl">
             {"\u{1F522}"}
           </span>
-          <span className="text-5xl font-black tracking-wider">さんすう</span>
+          <span className="text-5xl font-black tracking-wider">かず</span>
           <span className="text-xl opacity-80">
             かず・けいさん
           </span>
