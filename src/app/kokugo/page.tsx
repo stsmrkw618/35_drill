@@ -1,0 +1,379 @@
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import Link from "next/link";
+import CharacterPopup from "@/components/CharacterPopup";
+import {
+  mojiQuestions,
+  aiueoQuestions,
+  kotobaQuestions,
+  shuffleArray,
+  characterImages,
+} from "@/lib/gameData";
+import { playCorrect, playWrong, playComplete, playBgm } from "@/lib/sounds";
+
+type GameType = "moji" | "aiueo" | "kotoba";
+
+const games: { id: GameType; label: string; icon: string }[] = [
+  { id: "moji", label: "もじを えらぼう", icon: "\u{1F4AC}" },
+  { id: "aiueo", label: "あいうえお", icon: "\u{1F520}" },
+  { id: "kotoba", label: "ことば づくり", icon: "\u2728" },
+];
+
+function getQuestions(game: GameType) {
+  switch (game) {
+    case "moji":
+      return mojiQuestions;
+    case "aiueo":
+      return aiueoQuestions;
+    case "kotoba":
+      return kotobaQuestions;
+  }
+}
+
+export default function KokugoPage() {
+  const [game, setGame] = useState<GameType>("moji");
+  const [qIndex, setQIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [shakeId, setShakeId] = useState<string | null>(null);
+  const [completed, setCompleted] = useState(false);
+  const [placedChars, setPlacedChars] = useState<number[]>([]);
+
+  const questions = getQuestions(game);
+  const total = questions.length;
+
+  const resetGame = (g: GameType) => {
+    setGame(g);
+    setQIndex(0);
+    setScore(0);
+    setShowPopup(false);
+    setShakeId(null);
+    setCompleted(false);
+    setPlacedChars([]);
+  };
+
+  useEffect(() => {
+    playBgm();
+  }, []);
+
+  const handleCorrect = useCallback(() => {
+    playCorrect();
+    setScore((s) => s + 1);
+    setShowPopup(true);
+  }, []);
+
+  const handlePopupClose = useCallback(() => {
+    setShowPopup(false);
+    if (qIndex + 1 >= total) {
+      playComplete();
+      setCompleted(true);
+    } else {
+      setQIndex((i) => i + 1);
+      setPlacedChars([]);
+    }
+  }, [qIndex, total]);
+
+  const handleWrong = (id: string) => {
+    playWrong();
+    setShakeId(id);
+    setTimeout(() => setShakeId(null), 400);
+  };
+
+  return (
+    <main className="min-h-dvh flex flex-col">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-pink-400 to-rose-500 text-white px-6 py-4 flex items-center gap-4 shadow-lg">
+        <Link
+          href="/"
+          className="text-3xl bg-white/20 rounded-full w-14 h-14 flex items-center justify-center active:scale-90 transition-transform"
+        >
+          {"\u2190"}
+        </Link>
+        <h1 className="text-3xl font-black flex-1">
+          {"\u{1F4D6}"} こくご
+        </h1>
+        <div className="text-2xl font-bold">
+          {"\u2B50"} {score}もん
+        </div>
+      </header>
+
+      {/* Game tabs */}
+      <div className="flex gap-2 p-3 bg-pink-50">
+        {games.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => resetGame(g.id)}
+            className={`flex-1 py-3 px-2 rounded-2xl font-bold text-lg transition-all ${
+              game === g.id
+                ? "bg-gradient-to-r from-pink-400 to-rose-500 text-white shadow-md scale-105"
+                : "bg-white text-pink-400 shadow"
+            }`}
+          >
+            {g.icon} {g.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Game area */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        {completed ? (
+          <CompletionScreen score={score} total={total} onRetry={() => resetGame(game)} />
+        ) : game === "moji" ? (
+          <MojiGame
+            key={`moji-${qIndex}`}
+            question={mojiQuestions[qIndex]}
+            onCorrect={handleCorrect}
+            onWrong={handleWrong}
+            shakeId={shakeId}
+          />
+        ) : game === "aiueo" ? (
+          <AiueoGame
+            key={`aiueo-${qIndex}`}
+            question={aiueoQuestions[qIndex]}
+            onCorrect={handleCorrect}
+            onWrong={handleWrong}
+            shakeId={shakeId}
+          />
+        ) : (
+          <KotobaGame
+            key={`kotoba-${qIndex}`}
+            question={kotobaQuestions[qIndex]}
+            onCorrect={handleCorrect}
+            placedChars={placedChars}
+            setPlacedChars={setPlacedChars}
+            onWrong={handleWrong}
+            shakeId={shakeId}
+          />
+        )}
+      </div>
+
+      <CharacterPopup show={showPopup} onClose={handlePopupClose} />
+    </main>
+  );
+}
+
+// --- Moji Game ---
+function MojiGame({
+  question,
+  onCorrect,
+  onWrong,
+  shakeId,
+}: {
+  question: (typeof mojiQuestions)[number];
+  onCorrect: () => void;
+  onWrong: (id: string) => void;
+  shakeId: string | null;
+}) {
+  const [shuffled, setShuffled] = useState<string[]>([]);
+  useEffect(() => {
+    setShuffled(shuffleArray(question.options));
+  }, [question]);
+
+  if (shuffled.length === 0) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
+      <p className="text-3xl text-gray-500 font-bold">これは なーんだ？</p>
+      <div className="text-[140px] leading-none animate-pop">{question.emoji}</div>
+      <div className="grid grid-cols-3 gap-4 w-full">
+        {shuffled.map((opt) => (
+          <button
+            key={opt}
+            onClick={() =>
+              opt === question.answer ? onCorrect() : onWrong(opt)
+            }
+            className={`bg-white rounded-2xl py-6 px-4 text-4xl font-black shadow-lg active:scale-95 transition-transform border-4 ${
+              shakeId === opt ? "animate-shake border-red-300 bg-red-50" : "border-transparent"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Aiueo Game ---
+function AiueoGame({
+  question,
+  onCorrect,
+  onWrong,
+  shakeId,
+}: {
+  question: (typeof aiueoQuestions)[number];
+  onCorrect: () => void;
+  onWrong: (id: string) => void;
+  shakeId: string | null;
+}) {
+  const [shuffled, setShuffled] = useState<typeof question.options>([]);
+  useEffect(() => {
+    setShuffled(shuffleArray(question.options));
+  }, [question]);
+
+  if (shuffled.length === 0) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
+      <p className="text-3xl text-gray-500 font-bold">
+        「{question.char}」から はじまるのは？
+      </p>
+      <div className="text-[120px] font-black text-pink-500 bg-white rounded-3xl w-44 h-44 flex items-center justify-center shadow-lg animate-pop">
+        {question.char}
+      </div>
+      <div className="grid grid-cols-2 gap-4 w-full">
+        {shuffled.map((opt) => (
+          <button
+            key={opt.word}
+            onClick={() =>
+              opt.correct ? onCorrect() : onWrong(opt.word)
+            }
+            className={`bg-white rounded-2xl py-6 px-4 text-3xl font-bold shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-3 border-4 ${
+              shakeId === opt.word ? "animate-shake border-red-300 bg-red-50" : "border-transparent"
+            }`}
+          >
+            <span className="text-5xl">{opt.emoji}</span>
+            <span>{opt.word}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Kotoba Game ---
+function KotobaGame({
+  question,
+  onCorrect,
+  placedChars,
+  setPlacedChars,
+  onWrong,
+  shakeId,
+}: {
+  question: (typeof kotobaQuestions)[number];
+  onCorrect: () => void;
+  placedChars: number[];
+  setPlacedChars: (chars: number[]) => void;
+  onWrong: (id: string) => void;
+  shakeId: string | null;
+}) {
+  const [chars, setChars] = useState<{ char: string; origIndex: number }[]>([]);
+  useEffect(() => {
+    const arr = question.word.split("").map((c, i) => ({ char: c, origIndex: i }));
+    setChars(shuffleArray(arr));
+  }, [question]);
+
+  const wordChars = question.word.split("");
+
+  const handleTap = (origIndex: number) => {
+    if (placedChars.includes(origIndex)) return;
+
+    const nextExpected = wordChars[placedChars.length];
+    const tappedChar = wordChars[origIndex];
+
+    if (tappedChar === nextExpected) {
+      const newPlaced = [...placedChars, origIndex];
+      setPlacedChars(newPlaced);
+      if (newPlaced.length === wordChars.length) {
+        onCorrect();
+      }
+    } else {
+      onWrong(`kotoba-${origIndex}`);
+    }
+  };
+
+  if (chars.length === 0) return null;
+
+  return (
+    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
+      <p className="text-3xl text-gray-500 font-bold">もじを ならべよう！</p>
+      <div className="flex items-center gap-4">
+        <span className="text-[100px]">{question.emoji}</span>
+        <span className="text-2xl text-gray-400 font-bold">ひんと: {question.hint}</span>
+      </div>
+
+      {/* Answer slots */}
+      <div className="flex gap-3">
+        {wordChars.map((_, i) => (
+          <div
+            key={i}
+            className={`w-24 h-24 rounded-2xl border-4 border-dashed flex items-center justify-center text-5xl font-black transition-all ${
+              placedChars.length > i
+                ? "border-pink-400 bg-pink-100 text-pink-600 animate-pop"
+                : "border-gray-300 bg-white"
+            }`}
+          >
+            {placedChars.length > i ? wordChars[placedChars[i]] : ""}
+          </div>
+        ))}
+      </div>
+
+      {/* Character choices */}
+      <div className="flex gap-3 flex-wrap justify-center">
+        {chars.map((item) => (
+          <button
+            key={item.origIndex}
+            onClick={() => handleTap(item.origIndex)}
+            disabled={placedChars.includes(item.origIndex)}
+            className={`w-24 h-24 rounded-2xl text-5xl font-black shadow-lg transition-all ${
+              placedChars.includes(item.origIndex)
+                ? "bg-gray-200 text-gray-400 scale-90"
+                : "bg-white text-gray-700 active:scale-90 border-4 border-transparent"
+            } ${shakeId === `kotoba-${item.origIndex}` ? "animate-shake border-red-300 bg-red-50" : ""}`}
+          >
+            {item.char}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Completion Screen ---
+function CompletionScreen({
+  score,
+  total,
+  onRetry,
+}: {
+  score: number;
+  total: number;
+  onRetry: () => void;
+}) {
+  const [imgSrc, setImgSrc] = useState("");
+  useEffect(() => {
+    setImgSrc(characterImages[Math.floor(Math.random() * characterImages.length)]);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center gap-6 animate-bounce-in">
+      {imgSrc && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imgSrc} alt="" className="w-52 h-52 object-contain" />
+      )}
+      <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-yellow-500">
+        おわり！
+      </div>
+      <div className="text-4xl font-bold text-gray-600">
+        {score}もん せいかい！
+      </div>
+      <div className="text-6xl">
+        {score === total ? "\u{1F389}\u{1F389}\u{1F389}" : score >= total / 2 ? "\u{1F31F}\u{1F31F}" : "\u{1F4AA}"}
+      </div>
+      <div className="flex gap-4 mt-4">
+        <button
+          onClick={onRetry}
+          className="bg-gradient-to-r from-pink-400 to-rose-500 text-white text-3xl font-black py-5 px-12 rounded-full shadow-lg active:scale-95 transition-transform"
+        >
+          もういっかい
+        </button>
+        <Link
+          href="/"
+          className="bg-white text-pink-500 text-3xl font-black py-5 px-12 rounded-full shadow-lg active:scale-95 transition-transform border-2 border-pink-300"
+        >
+          もどる
+        </Link>
+      </div>
+    </div>
+  );
+}
