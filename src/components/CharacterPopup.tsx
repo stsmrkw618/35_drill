@@ -63,7 +63,7 @@ export default function CharacterPopup({
           </p>
         </div>
         <p className="text-2xl text-white font-bold mt-2">
-          さわって つぎへすすもう
+          さわって つぎに すすもう
         </p>
       </div>
     </div>

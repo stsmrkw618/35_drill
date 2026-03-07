@@ -174,7 +174,7 @@ function MojiGame({
 
   return (
     <div className="flex flex-col items-center gap-8 w-full max-w-xl">
-      <p className="text-3xl text-gray-500 font-bold">これは なーんだ？</p>
+      <p className="text-3xl text-gray-500 font-bold">なんの えかな？</p>
       <div className="text-[140px] leading-none animate-pop">{question.emoji}</div>
       <div className="grid grid-cols-3 gap-4 w-full">
         {shuffled.map((opt) => (
@@ -217,7 +217,7 @@ function AiueoGame({
   return (
     <div className="flex flex-col items-center gap-8 w-full max-w-xl">
       <p className="text-3xl text-gray-500 font-bold">
-        「{question.char}」から はじまるのは？
+        「{question.char}」から はじまる ことば どーれだ？
       </p>
       <div className="text-[120px] font-black text-pink-500 bg-white rounded-3xl w-44 h-44 flex items-center justify-center shadow-lg animate-pop">
         {question.char}
