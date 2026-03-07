@@ -27,7 +27,7 @@ const gardenDecorations = [
   { emoji: "\u{1F98B}", top: "75%", right: "3%" },
 ];
 
-const TOTAL_SLOTS = 24;
+const TOTAL_SLOTS = 8;
 
 export default function StickersPage() {
   const [stickers, setStickers] = useState<Sticker[]>([]);
@@ -112,7 +112,7 @@ export default function StickersPage() {
               </div>
 
               {/* 台紙グリッド */}
-              <div className="grid grid-cols-4 gap-3 max-w-lg mx-auto">
+              <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
                 {Array.from({ length: TOTAL_SLOTS }).map((_, i) => {
                   const sticker = stickers[i];
                   if (sticker) {
