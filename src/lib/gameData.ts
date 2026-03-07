@@ -18,6 +18,12 @@ export const characterImages = [
   "/images/char-16.png",
   "/images/char-17.png",
   "/images/char-18.png",
+  "/images/char-19.gif",
+  "/images/char-20.gif",
+  "/images/char-21.gif",
+  "/images/char-22.gif",
+  "/images/char-23.jpg",
+  "/images/char-24.jpg",
 ];
 
 export const praiseMessages = [
