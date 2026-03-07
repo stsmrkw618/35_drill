@@ -113,3 +113,16 @@ export function resumeAudio() {
     }
   } catch {}
 }
+
+// 問題文の音声読み上げ (Web Speech API)
+export function speakText(text: string) {
+  try {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ja-JP";
+    utter.rate = 0.85;
+    utter.pitch = 1.3;
+    window.speechSynthesis.speak(utter);
+  } catch {}
+}

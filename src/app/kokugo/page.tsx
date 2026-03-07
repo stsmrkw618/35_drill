@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import CharacterPopup from "@/components/CharacterPopup";
 import StickerAward from "@/components/StickerAward";
+import ProgressDots from "@/components/ProgressDots";
 import {
   mojiPool,
   aiueoPool,
@@ -13,15 +14,15 @@ import {
   characterImages,
   QUESTIONS_PER_GAME,
 } from "@/lib/gameData";
-import { playCorrect, playWrong, playComplete, playBgm } from "@/lib/sounds";
+import { playCorrect, playWrong, playComplete, playBgm, speakText } from "@/lib/sounds";
 import { addSticker, type Sticker } from "@/lib/stickers";
 
 type GameType = "moji" | "aiueo" | "kotoba";
 
-const games: { id: GameType; label: string; icon: string }[] = [
-  { id: "moji", label: "もじを えらぼう", icon: "\u{1F4AC}" },
-  { id: "aiueo", label: "あいうえお", icon: "\u{1F520}" },
-  { id: "kotoba", label: "ことば づくり", icon: "\u2728" },
+const games: { id: GameType; label: string; icon: string; desc: string }[] = [
+  { id: "moji", label: "もじを えらぼう", icon: "\u{1F4AC}", desc: "えを みて こたえよう" },
+  { id: "aiueo", label: "あいうえお", icon: "\u{1F520}", desc: "はじまる もじ どーれ？" },
+  { id: "kotoba", label: "ことば づくり", icon: "\u2728", desc: "もじを ならべよう" },
 ];
 
 function generateQuestions(game: GameType) {
@@ -36,7 +37,7 @@ function generateQuestions(game: GameType) {
 }
 
 export default function KokugoPage() {
-  const [game, setGame] = useState<GameType>("moji");
+  const [game, setGame] = useState<GameType | null>(null);
   const [questions, setQuestions] = useState(() => generateQuestions("moji"));
   const [qIndex, setQIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -48,7 +49,7 @@ export default function KokugoPage() {
 
   const total = questions.length;
 
-  const resetGame = (g: GameType) => {
+  const startGame = (g: GameType) => {
     setGame(g);
     setQuestions(generateQuestions(g));
     setQIndex(0);
@@ -74,7 +75,7 @@ export default function KokugoPage() {
     setShowPopup(false);
     if (qIndex + 1 >= total) {
       playComplete();
-      const sticker = addSticker(game);
+      const sticker = addSticker(game!);
       setAwardedSticker(sticker);
     } else {
       setQIndex((i) => i + 1);
@@ -93,7 +94,14 @@ export default function KokugoPage() {
       {/* Header */}
       <header className="bg-gradient-to-r from-pink-400 to-rose-500 text-white px-6 py-4 flex items-center gap-4 shadow-lg">
         <Link
-          href="/"
+          href={game ? "#" : "/"}
+          onClick={(e) => {
+            if (game) {
+              e.preventDefault();
+              setGame(null);
+              setCompleted(false);
+            }
+          }}
           className="text-3xl bg-white/20 rounded-full w-14 h-14 flex items-center justify-center active:scale-90 transition-transform"
         >
           {"\u2190"}
@@ -101,60 +109,79 @@ export default function KokugoPage() {
         <h1 className="text-3xl font-black flex-1">
           {"\u{1F4D6}"} こくご
         </h1>
-        <div className="text-2xl font-bold">
-          {"\u2B50"} {score}もん
-        </div>
+        {game && (
+          <div className="text-2xl font-bold">
+            {"\u2B50"} {score}もん
+          </div>
+        )}
       </header>
 
-      {/* Game tabs */}
-      <div className="flex gap-2 p-3 bg-pink-50">
-        {games.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => resetGame(g.id)}
-            className={`flex-1 py-3 px-2 rounded-2xl font-bold text-lg transition-all ${
-              game === g.id
-                ? "bg-gradient-to-r from-pink-400 to-rose-500 text-white shadow-md scale-105"
-                : "bg-white text-pink-400 shadow"
-            }`}
-          >
-            {g.icon} {g.label}
-          </button>
-        ))}
-      </div>
+      {!game ? (
+        /* Game selection cards */
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-6">
+          <p className="text-3xl text-gray-500 font-bold animate-fade-in-up">
+            どれで あそぶ？
+          </p>
+          <div className="flex flex-col gap-5 w-full max-w-md">
+            {games.map((g, i) => (
+              <button
+                key={g.id}
+                onClick={() => startGame(g.id)}
+                className="bg-white rounded-3xl p-6 shadow-lg active:scale-95 transition-transform flex items-center gap-5 border-4 border-pink-200 animate-fade-in-up"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                <span className="text-7xl w-24 h-24 flex items-center justify-center bg-pink-50 rounded-2xl">
+                  {g.icon}
+                </span>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="text-3xl font-black text-pink-500">{g.label}</span>
+                  <span className="text-xl text-gray-400 font-bold">{g.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Progress dots */}
+          {!completed && (
+            <ProgressDots current={qIndex} total={total} color="pink" />
+          )}
 
-      {/* Game area */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        {completed ? (
-          <CompletionScreen score={score} total={total} onRetry={() => resetGame(game)} />
-        ) : game === "moji" ? (
-          <MojiGame
-            key={`moji-${qIndex}`}
-            question={questions[qIndex] as (typeof mojiPool)[number]}
-            onCorrect={handleCorrect}
-            onWrong={handleWrong}
-            shakeId={shakeId}
-          />
-        ) : game === "aiueo" ? (
-          <AiueoGame
-            key={`aiueo-${qIndex}`}
-            question={questions[qIndex] as (typeof aiueoPool)[number]}
-            onCorrect={handleCorrect}
-            onWrong={handleWrong}
-            shakeId={shakeId}
-          />
-        ) : (
-          <KotobaGame
-            key={`kotoba-${qIndex}`}
-            question={questions[qIndex] as (typeof kotobaPool)[number]}
-            onCorrect={handleCorrect}
-            placedChars={placedChars}
-            setPlacedChars={setPlacedChars}
-            onWrong={handleWrong}
-            shakeId={shakeId}
-          />
-        )}
-      </div>
+          {/* Game area */}
+          <div className="flex-1 flex items-center justify-center p-6">
+            {completed ? (
+              <CompletionScreen score={score} total={total} onRetry={() => startGame(game)} />
+            ) : game === "moji" ? (
+              <MojiGame
+                key={`moji-${qIndex}`}
+                question={questions[qIndex] as (typeof mojiPool)[number]}
+                onCorrect={handleCorrect}
+                onWrong={handleWrong}
+                shakeId={shakeId}
+              />
+            ) : game === "aiueo" ? (
+              <AiueoGame
+                key={`aiueo-${qIndex}`}
+                question={questions[qIndex] as (typeof aiueoPool)[number]}
+                onCorrect={handleCorrect}
+                onWrong={handleWrong}
+                shakeId={shakeId}
+              />
+            ) : (
+              <KotobaGame
+                key={`kotoba-${qIndex}`}
+                question={questions[qIndex] as (typeof kotobaPool)[number]}
+                onCorrect={handleCorrect}
+                placedChars={placedChars}
+                setPlacedChars={setPlacedChars}
+                onWrong={handleWrong}
+                shakeId={shakeId}
+              />
+            )}
+          </div>
+        </>
+      )}
 
       <CharacterPopup show={showPopup} onClose={handlePopupClose} />
       <StickerAward
@@ -183,6 +210,7 @@ function MojiGame({
   const [shuffled, setShuffled] = useState<string[]>([]);
   useEffect(() => {
     setShuffled(shuffleArray(question.options));
+    speakText("なんの えかな？");
   }, [question]);
 
   if (shuffled.length === 0) return null;
@@ -225,6 +253,7 @@ function AiueoGame({
   const [shuffled, setShuffled] = useState<typeof question.options>([]);
   useEffect(() => {
     setShuffled(shuffleArray(question.options));
+    speakText(`${question.char}から はじまる ことば どーれだ？`);
   }, [question]);
 
   if (shuffled.length === 0) return null;
@@ -277,6 +306,7 @@ function KotobaGame({
   useEffect(() => {
     const arr = question.word.split("").map((c, i) => ({ char: c, origIndex: i }));
     setChars(shuffleArray(arr));
+    speakText("もじを ならべよう！");
   }, [question]);
 
   const wordChars = question.word.split("");
@@ -358,7 +388,12 @@ function CompletionScreen({
   const [imgSrc, setImgSrc] = useState("");
   useEffect(() => {
     setImgSrc(characterImages[Math.floor(Math.random() * characterImages.length)]);
-  }, []);
+    speakText(
+      score === total
+        ? "すごーい！ぜんもん せいかい！"
+        : `${score}もん せいかい！がんばったね！`
+    );
+  }, [score, total]);
 
   return (
     <div className="flex flex-col items-center gap-6 animate-bounce-in">
