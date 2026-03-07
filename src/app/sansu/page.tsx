@@ -5,11 +5,13 @@ import Link from "next/link";
 import CharacterPopup from "@/components/CharacterPopup";
 import StickerAward from "@/components/StickerAward";
 import {
-  kazoeQuestions,
-  tashizanQuestions,
-  ookiiQuestions,
+  kazoePool,
+  tashizanPool,
+  ookiiPool,
+  pickRandom,
   shuffleArray,
   characterImages,
+  QUESTIONS_PER_GAME,
 } from "@/lib/gameData";
 import { playCorrect, playWrong, playComplete, playBgm } from "@/lib/sounds";
 import { addSticker, type Sticker } from "@/lib/stickers";
@@ -17,24 +19,25 @@ import { addSticker, type Sticker } from "@/lib/stickers";
 type GameType = "kazoe" | "tashizan" | "ookii";
 
 const games: { id: GameType; label: string; icon: string }[] = [
-  { id: "kazoe", label: "かぞえよう", icon: "\u{1F34E}" },
-  { id: "tashizan", label: "たしざん", icon: "\u2795" },
-  { id: "ookii", label: "どっちが おおきい？", icon: "\u{1F449}" },
+  { id: "kazoe", label: "\u304B\u305E\u3048\u3088\u3046", icon: "\u{1F34E}" },
+  { id: "tashizan", label: "\u305F\u3057\u3056\u3093", icon: "\u2795" },
+  { id: "ookii", label: "\u3069\u3063\u3061\u304C \u304A\u304A\u304D\u3044\uFF1F", icon: "\u{1F449}" },
 ];
 
-function getTotal(game: GameType) {
+function generateQuestions(game: GameType) {
   switch (game) {
     case "kazoe":
-      return kazoeQuestions.length;
+      return pickRandom(kazoePool, QUESTIONS_PER_GAME.kazoe);
     case "tashizan":
-      return tashizanQuestions.length;
+      return pickRandom(tashizanPool, QUESTIONS_PER_GAME.tashizan);
     case "ookii":
-      return ookiiQuestions.length;
+      return pickRandom(ookiiPool, QUESTIONS_PER_GAME.ookii);
   }
 }
 
 export default function SansuPage() {
   const [game, setGame] = useState<GameType>("kazoe");
+  const [questions, setQuestions] = useState(() => generateQuestions("kazoe"));
   const [qIndex, setQIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
@@ -42,10 +45,11 @@ export default function SansuPage() {
   const [completed, setCompleted] = useState(false);
   const [awardedSticker, setAwardedSticker] = useState<Sticker | null>(null);
 
-  const total = getTotal(game);
+  const total = questions.length;
 
   const resetGame = (g: GameType) => {
     setGame(g);
+    setQuestions(generateQuestions(g));
     setQIndex(0);
     setScore(0);
     setShowPopup(false);
@@ -127,7 +131,7 @@ export default function SansuPage() {
         ) : game === "kazoe" ? (
           <KazoeGame
             key={`kazoe-${qIndex}`}
-            question={kazoeQuestions[qIndex]}
+            question={questions[qIndex] as (typeof kazoePool)[number]}
             onCorrect={handleCorrect}
             onWrong={handleWrong}
             shakeId={shakeId}
@@ -135,7 +139,7 @@ export default function SansuPage() {
         ) : game === "tashizan" ? (
           <TashizanGame
             key={`tashi-${qIndex}`}
-            question={tashizanQuestions[qIndex]}
+            question={questions[qIndex] as (typeof tashizanPool)[number]}
             onCorrect={handleCorrect}
             onWrong={handleWrong}
             shakeId={shakeId}
@@ -143,7 +147,7 @@ export default function SansuPage() {
         ) : (
           <OokiiGame
             key={`ookii-${qIndex}`}
-            question={ookiiQuestions[qIndex]}
+            question={questions[qIndex] as (typeof ookiiPool)[number]}
             onCorrect={handleCorrect}
             onWrong={handleWrong}
             shakeId={shakeId}
@@ -170,7 +174,7 @@ function KazoeGame({
   onWrong,
   shakeId,
 }: {
-  question: (typeof kazoeQuestions)[number];
+  question: (typeof kazoePool)[number];
   onCorrect: () => void;
   onWrong: (id: string) => void;
   shakeId: string | null;
@@ -227,7 +231,7 @@ function TashizanGame({
   onWrong,
   shakeId,
 }: {
-  question: (typeof tashizanQuestions)[number];
+  question: (typeof tashizanPool)[number];
   onCorrect: () => void;
   onWrong: (id: string) => void;
   shakeId: string | null;
@@ -303,7 +307,7 @@ function OokiiGame({
   onWrong,
   shakeId,
 }: {
-  question: (typeof ookiiQuestions)[number];
+  question: (typeof ookiiPool)[number];
   onCorrect: () => void;
   onWrong: (id: string) => void;
   shakeId: string | null;

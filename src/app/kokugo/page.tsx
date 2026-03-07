@@ -5,11 +5,13 @@ import Link from "next/link";
 import CharacterPopup from "@/components/CharacterPopup";
 import StickerAward from "@/components/StickerAward";
 import {
-  mojiQuestions,
-  aiueoQuestions,
-  kotobaQuestions,
+  mojiPool,
+  aiueoPool,
+  kotobaPool,
+  pickRandom,
   shuffleArray,
   characterImages,
+  QUESTIONS_PER_GAME,
 } from "@/lib/gameData";
 import { playCorrect, playWrong, playComplete, playBgm } from "@/lib/sounds";
 import { addSticker, type Sticker } from "@/lib/stickers";
@@ -22,19 +24,20 @@ const games: { id: GameType; label: string; icon: string }[] = [
   { id: "kotoba", label: "ことば づくり", icon: "\u2728" },
 ];
 
-function getQuestions(game: GameType) {
+function generateQuestions(game: GameType) {
   switch (game) {
     case "moji":
-      return mojiQuestions;
+      return pickRandom(mojiPool, QUESTIONS_PER_GAME.moji);
     case "aiueo":
-      return aiueoQuestions;
+      return pickRandom(aiueoPool, QUESTIONS_PER_GAME.aiueo);
     case "kotoba":
-      return kotobaQuestions;
+      return pickRandom(kotobaPool, QUESTIONS_PER_GAME.kotoba);
   }
 }
 
 export default function KokugoPage() {
   const [game, setGame] = useState<GameType>("moji");
+  const [questions, setQuestions] = useState(() => generateQuestions("moji"));
   const [qIndex, setQIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
@@ -43,11 +46,11 @@ export default function KokugoPage() {
   const [placedChars, setPlacedChars] = useState<number[]>([]);
   const [awardedSticker, setAwardedSticker] = useState<Sticker | null>(null);
 
-  const questions = getQuestions(game);
   const total = questions.length;
 
   const resetGame = (g: GameType) => {
     setGame(g);
+    setQuestions(generateQuestions(g));
     setQIndex(0);
     setScore(0);
     setShowPopup(false);
@@ -127,7 +130,7 @@ export default function KokugoPage() {
         ) : game === "moji" ? (
           <MojiGame
             key={`moji-${qIndex}`}
-            question={mojiQuestions[qIndex]}
+            question={questions[qIndex] as (typeof mojiPool)[number]}
             onCorrect={handleCorrect}
             onWrong={handleWrong}
             shakeId={shakeId}
@@ -135,7 +138,7 @@ export default function KokugoPage() {
         ) : game === "aiueo" ? (
           <AiueoGame
             key={`aiueo-${qIndex}`}
-            question={aiueoQuestions[qIndex]}
+            question={questions[qIndex] as (typeof aiueoPool)[number]}
             onCorrect={handleCorrect}
             onWrong={handleWrong}
             shakeId={shakeId}
@@ -143,7 +146,7 @@ export default function KokugoPage() {
         ) : (
           <KotobaGame
             key={`kotoba-${qIndex}`}
-            question={kotobaQuestions[qIndex]}
+            question={questions[qIndex] as (typeof kotobaPool)[number]}
             onCorrect={handleCorrect}
             placedChars={placedChars}
             setPlacedChars={setPlacedChars}
@@ -172,7 +175,7 @@ function MojiGame({
   onWrong,
   shakeId,
 }: {
-  question: (typeof mojiQuestions)[number];
+  question: (typeof mojiPool)[number];
   onCorrect: () => void;
   onWrong: (id: string) => void;
   shakeId: string | null;
@@ -214,7 +217,7 @@ function AiueoGame({
   onWrong,
   shakeId,
 }: {
-  question: (typeof aiueoQuestions)[number];
+  question: (typeof aiueoPool)[number];
   onCorrect: () => void;
   onWrong: (id: string) => void;
   shakeId: string | null;
@@ -263,7 +266,7 @@ function KotobaGame({
   onWrong,
   shakeId,
 }: {
-  question: (typeof kotobaQuestions)[number];
+  question: (typeof kotobaPool)[number];
   onCorrect: () => void;
   placedChars: number[];
   setPlacedChars: (chars: number[]) => void;
