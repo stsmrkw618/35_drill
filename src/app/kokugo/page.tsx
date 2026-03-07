@@ -14,7 +14,8 @@ import {
   characterImages,
   QUESTIONS_PER_GAME,
 } from "@/lib/gameData";
-import { playCorrect, playWrong, playComplete, playBgm, speakText } from "@/lib/sounds";
+import { playCorrect, playWrong, playComplete, playBgm } from "@/lib/sounds";
+import SpeakButton from "@/components/SpeakButton";
 import { addSticker, type Sticker } from "@/lib/stickers";
 
 type GameType = "moji" | "aiueo" | "kotoba";
@@ -208,7 +209,6 @@ function MojiGame({
   const [shuffled, setShuffled] = useState<string[]>([]);
   useEffect(() => {
     setShuffled(shuffleArray(question.options));
-    speakText("なんの えかな？");
   }, [question]);
 
   if (shuffled.length === 0) return null;
@@ -216,7 +216,10 @@ function MojiGame({
   return (
     <div className="flex items-center gap-10 w-full max-w-4xl">
       <div className="flex flex-col items-center gap-4 flex-shrink-0">
-        <p className="text-3xl text-gray-500 font-bold">なんの えかな？</p>
+        <p className="text-3xl text-gray-500 font-bold flex items-center">
+          なんの えかな？
+          <SpeakButton text="なんの えかな？" />
+        </p>
         <div className="text-[140px] leading-none animate-pop">{question.emoji}</div>
       </div>
       <div className="grid grid-cols-3 gap-4 flex-1">
@@ -253,7 +256,6 @@ function AiueoGame({
   const [shuffled, setShuffled] = useState<typeof question.options>([]);
   useEffect(() => {
     setShuffled(shuffleArray(question.options));
-    speakText(`${question.char}から はじまる ことば どーれだ？`);
   }, [question]);
 
   if (shuffled.length === 0) return null;
@@ -261,9 +263,12 @@ function AiueoGame({
   return (
     <div className="flex items-center gap-10 w-full max-w-4xl">
       <div className="flex flex-col items-center gap-4 flex-shrink-0">
-        <p className="text-3xl text-gray-500 font-bold">
-          「{question.char}」から はじまる<br />ことば どーれだ？
-        </p>
+        <div className="flex items-center gap-1">
+          <p className="text-3xl text-gray-500 font-bold">
+            「{question.char}」から はじまる<br />ことば どーれだ？
+          </p>
+          <SpeakButton text={`${question.char}から はじまる ことば どーれだ？`} />
+        </div>
         <div className="text-[120px] font-black text-pink-500 bg-white rounded-3xl w-44 h-44 flex items-center justify-center shadow-lg animate-pop">
           {question.char}
         </div>
@@ -308,7 +313,6 @@ function KotobaGame({
   useEffect(() => {
     const arr = question.word.split("").map((c, i) => ({ char: c, origIndex: i }));
     setChars(shuffleArray(arr));
-    speakText("もじを ならべよう！");
   }, [question]);
 
   const wordChars = question.word.split("");
@@ -335,7 +339,10 @@ function KotobaGame({
   return (
     <div className="flex items-center gap-10 w-full max-w-4xl">
       <div className="flex flex-col items-center gap-4 flex-shrink-0">
-        <p className="text-3xl text-gray-500 font-bold">もじを ならべよう！</p>
+        <p className="text-3xl text-gray-500 font-bold flex items-center">
+          もじを ならべよう！
+          <SpeakButton text="もじを ならべよう！" />
+        </p>
         <span className="text-[100px]">{question.emoji}</span>
         <span className="text-2xl text-gray-400 font-bold">ひんと: {question.hint}</span>
       </div>
@@ -392,12 +399,7 @@ function CompletionScreen({
   const [imgSrc, setImgSrc] = useState("");
   useEffect(() => {
     setImgSrc(characterImages[Math.floor(Math.random() * characterImages.length)]);
-    speakText(
-      score === total
-        ? "すごーい！ぜんもん せいかい！"
-        : `${score}もん せいかい！がんばったね！`
-    );
-  }, [score, total]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-6 animate-bounce-in">

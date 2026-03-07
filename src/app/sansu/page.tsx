@@ -14,7 +14,8 @@ import {
   characterImages,
   QUESTIONS_PER_GAME,
 } from "@/lib/gameData";
-import { playCorrect, playWrong, playComplete, playBgm, speakText } from "@/lib/sounds";
+import { playCorrect, playWrong, playComplete, playBgm } from "@/lib/sounds";
+import SpeakButton from "@/components/SpeakButton";
 import { addSticker, type Sticker } from "@/lib/stickers";
 
 type GameType = "kazoe" | "tashizan" | "ookii";
@@ -208,7 +209,6 @@ function KazoeGame({
   const [shuffled, setShuffled] = useState<number[]>([]);
   useEffect(() => {
     setShuffled(shuffleArray(question.options));
-    speakText("いくつ あるかな？");
   }, [question]);
 
   if (shuffled.length === 0) return null;
@@ -216,7 +216,10 @@ function KazoeGame({
   return (
     <div className="flex items-center gap-10 w-full max-w-4xl">
       <div className="flex flex-col items-center gap-4 flex-shrink-0">
-        <p className="text-3xl text-gray-500 font-bold">いくつ あるかな？</p>
+        <p className="text-3xl text-gray-500 font-bold flex items-center">
+          いくつ あるかな？
+          <SpeakButton text="いくつ あるかな？" />
+        </p>
         <div className="flex flex-wrap justify-center gap-4 p-6 bg-white rounded-3xl shadow-lg min-h-[120px] max-w-[280px]">
           {emojis.map((e, i) => (
             <span
@@ -271,7 +274,6 @@ function TashizanGame({
   useEffect(() => {
     setShuffled(shuffleArray(question.options));
     setStep(0);
-    speakText("あわせて いくつ？");
 
     const t1 = setTimeout(() => setStep(1), 800);
     const t2 = setTimeout(() => setStep(2), 1500);
@@ -287,7 +289,10 @@ function TashizanGame({
     <div className="flex items-center gap-10 w-full max-w-4xl">
       {/* Left: visual + question */}
       <div className="flex flex-col items-center gap-4 flex-shrink-0">
-        <p className="text-3xl text-gray-500 font-bold">あわせて いくつ？</p>
+        <p className="text-3xl text-gray-500 font-bold flex items-center">
+          あわせて いくつ？
+          <SpeakButton text="あわせて いくつ？" />
+        </p>
         <div className="flex items-center gap-3 bg-white rounded-3xl p-5 shadow-lg animate-fade-in-up">
           <div className="flex flex-wrap gap-1 justify-center max-w-[130px]">
             {Array(question.a)
@@ -361,14 +366,11 @@ function OokiiGame({
 }) {
   const answer = question.left > question.right ? "left" : "right";
 
-  useEffect(() => {
-    speakText("おおきいほうを えらんでね！");
-  }, [question]);
-
   return (
     <div className="flex flex-col items-center gap-8 w-full max-w-xl">
-      <p className="text-3xl text-gray-500 font-bold">
+      <p className="text-3xl text-gray-500 font-bold flex items-center">
         おおきいほうを えらんでね！
+        <SpeakButton text="おおきいほうを えらんでね！" />
       </p>
       <div className="flex items-center gap-6 w-full">
         <button
@@ -424,12 +426,7 @@ function CompletionScreen({
   const [imgSrc, setImgSrc] = useState("");
   useEffect(() => {
     setImgSrc(characterImages[Math.floor(Math.random() * characterImages.length)]);
-    speakText(
-      score === total
-        ? "すごーい！ぜんもん せいかい！"
-        : `${score}もん せいかい！がんばったね！`
-    );
-  }, [score, total]);
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-6 animate-bounce-in">
