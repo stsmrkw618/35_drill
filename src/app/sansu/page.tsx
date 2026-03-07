@@ -119,21 +119,19 @@ export default function SansuPage() {
           <p className="text-3xl text-gray-500 font-bold animate-fade-in-up">
             どれで あそぶ？
           </p>
-          <div className="flex flex-col gap-5 w-full max-w-md">
+          <div className="flex flex-row gap-5 w-full max-w-3xl">
             {games.map((g, i) => (
               <button
                 key={g.id}
                 onClick={() => startGame(g.id)}
-                className="bg-white rounded-3xl p-6 shadow-lg active:scale-95 transition-transform flex items-center gap-5 border-4 border-sky-200 animate-fade-in-up"
+                className="flex-1 bg-white rounded-3xl p-6 shadow-lg active:scale-95 transition-transform flex flex-col items-center gap-3 border-4 border-sky-200 animate-fade-in-up"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <span className="text-7xl w-24 h-24 flex items-center justify-center bg-sky-50 rounded-2xl">
                   {g.icon}
                 </span>
-                <div className="flex flex-col items-start gap-1">
-                  <span className="text-3xl font-black text-sky-500">{g.label}</span>
-                  <span className="text-xl text-gray-400 font-bold">{g.desc}</span>
-                </div>
+                <span className="text-2xl font-black text-sky-500">{g.label}</span>
+                <span className="text-lg text-gray-400 font-bold">{g.desc}</span>
               </button>
             ))}
           </div>
@@ -216,20 +214,22 @@ function KazoeGame({
   if (shuffled.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
-      <p className="text-3xl text-gray-500 font-bold">いくつ あるかな？</p>
-      <div className="flex flex-wrap justify-center gap-4 p-6 bg-white rounded-3xl shadow-lg min-h-[120px]">
-        {emojis.map((e, i) => (
-          <span
-            key={i}
-            className="text-7xl animate-pop"
-            style={{ animationDelay: `${i * 0.1}s` }}
-          >
-            {e}
-          </span>
-        ))}
+    <div className="flex items-center gap-10 w-full max-w-4xl">
+      <div className="flex flex-col items-center gap-4 flex-shrink-0">
+        <p className="text-3xl text-gray-500 font-bold">いくつ あるかな？</p>
+        <div className="flex flex-wrap justify-center gap-4 p-6 bg-white rounded-3xl shadow-lg min-h-[120px] max-w-[280px]">
+          {emojis.map((e, i) => (
+            <span
+              key={i}
+              className="text-7xl animate-pop"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              {e}
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-4 gap-4 w-full">
+      <div className="grid grid-cols-2 gap-4 flex-1 max-w-[280px]">
         {shuffled.map((num) => (
           <button
             key={num}
@@ -284,46 +284,46 @@ function TashizanGame({
   if (shuffled.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
-      <p className="text-3xl text-gray-500 font-bold">あわせて いくつ？</p>
-
-      {/* Visual representation */}
-      <div className="flex items-center gap-4 bg-white rounded-3xl p-6 shadow-lg animate-fade-in-up">
-        <div className="flex flex-wrap gap-1 justify-center max-w-[160px]">
-          {Array(question.a)
-            .fill(question.emoji)
-            .map((e, i) => (
-              <span key={`a${i}`} className="text-6xl animate-pop" style={{ animationDelay: `${i * 0.08}s` }}>
-                {e}
-              </span>
-            ))}
+    <div className="flex items-center gap-10 w-full max-w-4xl">
+      {/* Left: visual + question */}
+      <div className="flex flex-col items-center gap-4 flex-shrink-0">
+        <p className="text-3xl text-gray-500 font-bold">あわせて いくつ？</p>
+        <div className="flex items-center gap-3 bg-white rounded-3xl p-5 shadow-lg animate-fade-in-up">
+          <div className="flex flex-wrap gap-1 justify-center max-w-[130px]">
+            {Array(question.a)
+              .fill(question.emoji)
+              .map((e, i) => (
+                <span key={`a${i}`} className="text-5xl animate-pop" style={{ animationDelay: `${i * 0.08}s` }}>
+                  {e}
+                </span>
+              ))}
+          </div>
+          <span className="text-5xl font-black text-sky-500">+</span>
+          <div className="flex flex-wrap gap-1 justify-center max-w-[130px]">
+            {Array(question.b)
+              .fill(question.emoji)
+              .map((e, i) => (
+                <span key={`b${i}`} className="text-5xl animate-pop" style={{ animationDelay: `${(question.a + i) * 0.08}s` }}>
+                  {e}
+                </span>
+              ))}
+          </div>
+          <span className="text-5xl font-black text-sky-500">=</span>
+          <span className="text-5xl font-black text-sky-400">？</span>
         </div>
-        <span className="text-6xl font-black text-sky-500">+</span>
-        <div className="flex flex-wrap gap-1 justify-center max-w-[160px]">
-          {Array(question.b)
-            .fill(question.emoji)
-            .map((e, i) => (
-              <span key={`b${i}`} className="text-6xl animate-pop" style={{ animationDelay: `${(question.a + i) * 0.08}s` }}>
-                {e}
-              </span>
-            ))}
+        {/* Number formula - step 1 */}
+        <div
+          className={`text-5xl font-black text-gray-700 transition-all duration-500 ${
+            step >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          }`}
+        >
+          {question.a} + {question.b} = ？
         </div>
-        <span className="text-6xl font-black text-sky-500">=</span>
-        <span className="text-6xl font-black text-sky-400">？</span>
       </div>
 
-      {/* Number formula - step 1 */}
+      {/* Right: options - step 2 */}
       <div
-        className={`text-6xl font-black text-gray-700 transition-all duration-500 ${
-          step >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        }`}
-      >
-        {question.a} + {question.b} = ？
-      </div>
-
-      {/* Options - step 2 */}
-      <div
-        className={`grid grid-cols-3 gap-4 w-full transition-all duration-500 ${
+        className={`grid grid-cols-3 gap-4 flex-1 max-w-[360px] transition-all duration-500 ${
           step >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >

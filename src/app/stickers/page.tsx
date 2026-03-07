@@ -112,7 +112,7 @@ export default function StickersPage() {
               </div>
 
               {/* 台紙グリッド */}
-              <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+              <div className="grid grid-cols-4 gap-4 max-w-2xl mx-auto">
                 {Array.from({ length: TOTAL_SLOTS }).map((_, i) => {
                   const sticker = stickers[i];
                   if (sticker) {

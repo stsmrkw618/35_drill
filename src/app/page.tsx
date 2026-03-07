@@ -51,13 +51,11 @@ export default function HomePage() {
         ))}
 
       {/* Title */}
-      <div className="text-center mb-10 animate-slide-up">
+      <div className="text-center mb-8 animate-slide-up">
         <h1 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-sky-500 drop-shadow-sm leading-tight">
-          おべんきょう
-          <br />
-          だいすき！
+          おべんきょう だいすき！
         </h1>
-        <p className="text-3xl text-gray-500 mt-6 font-bold">
+        <p className="text-3xl text-gray-500 mt-4 font-bold">
           さわって はじめよう
         </p>
       </div>

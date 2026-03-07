@@ -122,21 +122,19 @@ export default function KokugoPage() {
           <p className="text-3xl text-gray-500 font-bold animate-fade-in-up">
             どれで あそぶ？
           </p>
-          <div className="flex flex-col gap-5 w-full max-w-md">
+          <div className="flex flex-row gap-5 w-full max-w-3xl">
             {games.map((g, i) => (
               <button
                 key={g.id}
                 onClick={() => startGame(g.id)}
-                className="bg-white rounded-3xl p-6 shadow-lg active:scale-95 transition-transform flex items-center gap-5 border-4 border-pink-200 animate-fade-in-up"
+                className="flex-1 bg-white rounded-3xl p-6 shadow-lg active:scale-95 transition-transform flex flex-col items-center gap-3 border-4 border-pink-200 animate-fade-in-up"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <span className="text-7xl w-24 h-24 flex items-center justify-center bg-pink-50 rounded-2xl">
                   {g.icon}
                 </span>
-                <div className="flex flex-col items-start gap-1">
-                  <span className="text-3xl font-black text-pink-500">{g.label}</span>
-                  <span className="text-xl text-gray-400 font-bold">{g.desc}</span>
-                </div>
+                <span className="text-2xl font-black text-pink-500">{g.label}</span>
+                <span className="text-lg text-gray-400 font-bold">{g.desc}</span>
               </button>
             ))}
           </div>
@@ -216,10 +214,12 @@ function MojiGame({
   if (shuffled.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
-      <p className="text-3xl text-gray-500 font-bold">なんの えかな？</p>
-      <div className="text-[140px] leading-none animate-pop">{question.emoji}</div>
-      <div className="grid grid-cols-3 gap-4 w-full">
+    <div className="flex items-center gap-10 w-full max-w-4xl">
+      <div className="flex flex-col items-center gap-4 flex-shrink-0">
+        <p className="text-3xl text-gray-500 font-bold">なんの えかな？</p>
+        <div className="text-[140px] leading-none animate-pop">{question.emoji}</div>
+      </div>
+      <div className="grid grid-cols-3 gap-4 flex-1">
         {shuffled.map((opt) => (
           <button
             key={opt}
@@ -259,14 +259,16 @@ function AiueoGame({
   if (shuffled.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
-      <p className="text-3xl text-gray-500 font-bold">
-        「{question.char}」から はじまる ことば どーれだ？
-      </p>
-      <div className="text-[120px] font-black text-pink-500 bg-white rounded-3xl w-44 h-44 flex items-center justify-center shadow-lg animate-pop">
-        {question.char}
+    <div className="flex items-center gap-10 w-full max-w-4xl">
+      <div className="flex flex-col items-center gap-4 flex-shrink-0">
+        <p className="text-3xl text-gray-500 font-bold">
+          「{question.char}」から はじまる<br />ことば どーれだ？
+        </p>
+        <div className="text-[120px] font-black text-pink-500 bg-white rounded-3xl w-44 h-44 flex items-center justify-center shadow-lg animate-pop">
+          {question.char}
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 w-full">
+      <div className="grid grid-cols-2 gap-4 flex-1">
         {shuffled.map((opt) => (
           <button
             key={opt.word}
@@ -331,45 +333,47 @@ function KotobaGame({
   if (chars.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-xl">
-      <p className="text-3xl text-gray-500 font-bold">もじを ならべよう！</p>
-      <div className="flex items-center gap-4">
+    <div className="flex items-center gap-10 w-full max-w-4xl">
+      <div className="flex flex-col items-center gap-4 flex-shrink-0">
+        <p className="text-3xl text-gray-500 font-bold">もじを ならべよう！</p>
         <span className="text-[100px]">{question.emoji}</span>
         <span className="text-2xl text-gray-400 font-bold">ひんと: {question.hint}</span>
       </div>
 
-      {/* Answer slots */}
-      <div className="flex gap-3">
-        {wordChars.map((_, i) => (
-          <div
-            key={i}
-            className={`w-24 h-24 rounded-2xl border-4 border-dashed flex items-center justify-center text-5xl font-black transition-all ${
-              placedChars.length > i
-                ? "border-pink-400 bg-pink-100 text-pink-600 animate-pop"
-                : "border-gray-300 bg-white"
-            }`}
-          >
-            {placedChars.length > i ? wordChars[placedChars[i]] : ""}
-          </div>
-        ))}
-      </div>
+      <div className="flex flex-col items-center gap-6 flex-1">
+        {/* Answer slots */}
+        <div className="flex gap-3">
+          {wordChars.map((_, i) => (
+            <div
+              key={i}
+              className={`w-24 h-24 rounded-2xl border-4 border-dashed flex items-center justify-center text-5xl font-black transition-all ${
+                placedChars.length > i
+                  ? "border-pink-400 bg-pink-100 text-pink-600 animate-pop"
+                  : "border-gray-300 bg-white"
+              }`}
+            >
+              {placedChars.length > i ? wordChars[placedChars[i]] : ""}
+            </div>
+          ))}
+        </div>
 
-      {/* Character choices */}
-      <div className="flex gap-3 flex-wrap justify-center">
-        {chars.map((item) => (
-          <button
-            key={item.origIndex}
-            onClick={() => handleTap(item.origIndex)}
-            disabled={placedChars.includes(item.origIndex)}
-            className={`w-24 h-24 rounded-2xl text-5xl font-black shadow-lg transition-all ${
-              placedChars.includes(item.origIndex)
-                ? "bg-gray-200 text-gray-400 scale-90"
-                : "bg-white text-gray-700 active:scale-90 border-4 border-transparent"
-            } ${shakeId === `kotoba-${item.origIndex}` ? "animate-shake border-red-300 bg-red-50" : ""}`}
-          >
-            {item.char}
-          </button>
-        ))}
+        {/* Character choices */}
+        <div className="flex gap-3 flex-wrap justify-center">
+          {chars.map((item) => (
+            <button
+              key={item.origIndex}
+              onClick={() => handleTap(item.origIndex)}
+              disabled={placedChars.includes(item.origIndex)}
+              className={`w-24 h-24 rounded-2xl text-5xl font-black shadow-lg transition-all ${
+                placedChars.includes(item.origIndex)
+                  ? "bg-gray-200 text-gray-400 scale-90"
+                  : "bg-white text-gray-700 active:scale-90 border-4 border-transparent"
+              } ${shakeId === `kotoba-${item.origIndex}` ? "animate-shake border-red-300 bg-red-50" : ""}`}
+            >
+              {item.char}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
