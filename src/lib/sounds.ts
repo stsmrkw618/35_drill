@@ -90,7 +90,7 @@ export function playBgm() {
     if (!bgmAudio) {
       bgmAudio = new Audio("/sounds/ほんわかぷっぷー.mp3");
       bgmAudio.loop = true;
-      bgmAudio.volume = 0.25;
+      bgmAudio.volume = 0.1;
     }
     if (bgmAudio.paused) {
       bgmAudio.play().catch(() => {});
@@ -114,6 +114,31 @@ export function resumeAudio() {
   } catch {}
 }
 
+// タブ非表示時にBGMを一時停止、復帰時に再開
+let bgmWasPlaying = false;
+
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      if (bgmAudio && !bgmAudio.paused) {
+        bgmWasPlaying = true;
+        bgmAudio.pause();
+      }
+      if (audioCtx && audioCtx.state === "running") {
+        audioCtx.suspend();
+      }
+    } else {
+      if (bgmWasPlaying && bgmAudio) {
+        bgmAudio.play().catch(() => {});
+        bgmWasPlaying = false;
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+  });
+}
+
 // 問題文の音声読み上げ (Web Speech API)
 export function speakText(text: string) {
   try {
@@ -123,6 +148,7 @@ export function speakText(text: string) {
     utter.lang = "ja-JP";
     utter.rate = 0.85;
     utter.pitch = 1.3;
+    utter.volume = 1.0;
     window.speechSynthesis.speak(utter);
   } catch {}
 }
