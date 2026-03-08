@@ -251,6 +251,30 @@ function makeOokiiPool() {
 }
 export const ookiiPool = makeOokiiPool();
 
+// --- もじをかこう (全問題プール) ---
+export const kakikataPool = [
+  // あ行
+  { char: "あ" }, { char: "い" }, { char: "う" }, { char: "え" }, { char: "お" },
+  // か行
+  { char: "か" }, { char: "き" }, { char: "く" }, { char: "け" }, { char: "こ" },
+  // さ行
+  { char: "さ" }, { char: "し" }, { char: "す" }, { char: "せ" }, { char: "そ" },
+  // た行
+  { char: "た" }, { char: "ち" }, { char: "つ" }, { char: "て" }, { char: "と" },
+  // な行
+  { char: "な" }, { char: "に" }, { char: "ぬ" }, { char: "ね" }, { char: "の" },
+  // は行
+  { char: "は" }, { char: "ひ" }, { char: "ふ" }, { char: "へ" }, { char: "ほ" },
+  // ま行
+  { char: "ま" }, { char: "み" }, { char: "む" }, { char: "め" }, { char: "も" },
+  // や行
+  { char: "や" }, { char: "ゆ" }, { char: "よ" },
+  // ら行
+  { char: "ら" }, { char: "り" }, { char: "る" }, { char: "れ" }, { char: "ろ" },
+  // わ行
+  { char: "わ" }, { char: "を" }, { char: "ん" },
+];
+
 // =============================================
 // 出題数の設定
 // =============================================
@@ -258,6 +282,7 @@ export const QUESTIONS_PER_GAME = {
   moji: 8,
   aiueo: 8,
   kotoba: 6,
+  kakikata: 5,
   kazoe: 8,
   tashizan: 8,
   ookii: 8,

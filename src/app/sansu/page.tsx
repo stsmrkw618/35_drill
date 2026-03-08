@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import CharacterPopup from "@/components/CharacterPopup";
 import StickerAward from "@/components/StickerAward";
@@ -205,7 +205,9 @@ function KazoeGame({
   onWrong: (id: string) => void;
   shakeId: string | null;
 }) {
-  const emojis = Array(question.count).fill(question.emoji);
+  const count = question.count;
+  const topRow = Math.min(count, 5);
+  const bottomRow = Math.max(0, count - 5);
   const [shuffled, setShuffled] = useState<number[]>([]);
   useEffect(() => {
     setShuffled(shuffleArray(question.options));
@@ -220,16 +222,22 @@ function KazoeGame({
           いくつ あるかな？
           <SpeakButton text="いくつ あるかな？" />
         </p>
-        <div className="flex flex-wrap justify-center gap-4 p-6 bg-white rounded-3xl shadow-lg min-h-[120px] max-w-[280px]">
-          {emojis.map((e, i) => (
-            <span
-              key={i}
-              className="text-7xl animate-pop"
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              {e}
-            </span>
-          ))}
+        <div className="bg-white rounded-3xl shadow-lg p-6 min-h-[120px]">
+          <div className="grid grid-cols-5 gap-x-3 gap-y-2">
+            {Array(count).fill(question.emoji).map((e, i) => (
+              <React.Fragment key={i}>
+                {i === 5 && (
+                  <div className="col-span-5 border-t-2 border-dashed border-sky-300 my-1" />
+                )}
+                <span
+                  className="text-7xl animate-pop"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  {e}
+                </span>
+              </React.Fragment>
+            ))}
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4 flex-1 max-w-[280px]">
