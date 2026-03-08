@@ -140,6 +140,7 @@ if (typeof document !== "undefined") {
 }
 
 // 問題文の音声読み上げ (Web Speech API)
+// 読み上げ中はBGMを一時停止して聞き取りやすくする
 export function speakText(text: string) {
   try {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
@@ -149,6 +150,12 @@ export function speakText(text: string) {
     utter.rate = 0.7;
     utter.pitch = 1.3;
     utter.volume = 1.0;
+    // BGMを一時停止
+    if (bgmAudio && !bgmAudio.paused) {
+      bgmAudio.pause();
+      utter.onend = () => { bgmAudio?.play().catch(() => {}); };
+      utter.onerror = () => { bgmAudio?.play().catch(() => {}); };
+    }
     window.speechSynthesis.speak(utter);
   } catch {}
 }
