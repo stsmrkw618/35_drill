@@ -90,7 +90,7 @@ export function playBgm() {
     if (!bgmAudio) {
       bgmAudio = new Audio("/sounds/ほんわかぷっぷー.mp3");
       bgmAudio.loop = true;
-      bgmAudio.volume = 0.05;
+      bgmAudio.volume = 0.02;
     }
     if (bgmAudio.paused) {
       bgmAudio.play().catch(() => {});
