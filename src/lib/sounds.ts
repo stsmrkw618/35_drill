@@ -90,7 +90,7 @@ export function playBgm() {
     if (!bgmAudio) {
       bgmAudio = new Audio("/sounds/ほんわかぷっぷー.mp3");
       bgmAudio.loop = true;
-      bgmAudio.volume = 0.1;
+      bgmAudio.volume = 0.05;
     }
     if (bgmAudio.paused) {
       bgmAudio.play().catch(() => {});
@@ -146,7 +146,7 @@ export function speakText(text: string) {
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "ja-JP";
-    utter.rate = 0.85;
+    utter.rate = 0.7;
     utter.pitch = 1.3;
     utter.volume = 1.0;
     window.speechSynthesis.speak(utter);
