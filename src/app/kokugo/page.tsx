@@ -403,54 +403,6 @@ function KotobaGame({
 // --- Kakikata (もじをかこう) Game ---
 const CANVAS_SIZE = 400;
 
-// ストロークパスをキャンバスに描画するヘルパー
-function drawStrokePath(
-  ctx: CanvasRenderingContext2D,
-  points: { x: number; y: number }[],
-  progress: number = 1, // 0~1 でどこまで描くか
-  color: string = "#3b82f6",
-  lineWidth: number = 6
-) {
-  if (points.length < 2) return;
-  ctx.strokeStyle = color;
-  ctx.lineWidth = lineWidth;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  // 各セグメントの長さを計算
-  const segLengths: number[] = [];
-  let totalLen = 0;
-  for (let i = 1; i < points.length; i++) {
-    const dx = points[i].x - points[i - 1].x;
-    const dy = points[i].y - points[i - 1].y;
-    const len = Math.sqrt(dx * dx + dy * dy);
-    segLengths.push(len);
-    totalLen += len;
-  }
-
-  const drawLen = totalLen * progress;
-  let accumulated = 0;
-
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-
-  for (let i = 0; i < segLengths.length; i++) {
-    const segLen = segLengths[i];
-    if (accumulated + segLen <= drawLen) {
-      ctx.lineTo(points[i + 1].x, points[i + 1].y);
-      accumulated += segLen;
-    } else {
-      const remain = drawLen - accumulated;
-      const t = remain / segLen;
-      const x = points[i].x + (points[i + 1].x - points[i].x) * t;
-      const y = points[i].y + (points[i + 1].y - points[i].y) * t;
-      ctx.lineTo(x, y);
-      break;
-    }
-  }
-  ctx.stroke();
-}
-
 function KakikataGame({
   question,
   onCorrect,
@@ -459,40 +411,22 @@ function KakikataGame({
   onCorrect: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const guideCanvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawingRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const [hasDrawn, setHasDrawn] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const animFrameRef = useRef<number>(0);
 
   const strokes = hiraganaStrokes[question.char] || [];
 
   // Canvas setup + auto speak
   useEffect(() => {
-    const dpr = window.devicePixelRatio || 1;
-
     const canvas = canvasRef.current;
-    if (canvas) {
-      canvas.width = CANVAS_SIZE * dpr;
-      canvas.height = CANVAS_SIZE * dpr;
-      const ctx = canvas.getContext("2d");
-      if (ctx) ctx.scale(dpr, dpr);
-    }
-
-    const guideCanvas = guideCanvasRef.current;
-    if (guideCanvas) {
-      guideCanvas.width = CANVAS_SIZE * dpr;
-      guideCanvas.height = CANVAS_SIZE * dpr;
-      const gctx = guideCanvas.getContext("2d");
-      if (gctx) gctx.scale(dpr, dpr);
-    }
-
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = CANVAS_SIZE * dpr;
+    canvas.height = CANVAS_SIZE * dpr;
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.scale(dpr, dpr);
     speakText(question.char);
-
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
   }, [question]);
 
   const getPoint = (e: React.PointerEvent) => {
@@ -504,7 +438,6 @@ function KakikataGame({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (isAnimating) return;
     e.preventDefault();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     isDrawingRef.current = true;
@@ -546,74 +479,6 @@ function KakikataGame({
     setHasDrawn(false);
   };
 
-  // おてほんアニメーション
-  const playDemo = useCallback(() => {
-    if (isAnimating || strokes.length === 0) return;
-    setIsAnimating(true);
-
-    const guideCanvas = guideCanvasRef.current;
-    const gctx = guideCanvas?.getContext("2d");
-    if (!gctx || !guideCanvas) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    let strokeIdx = 0;
-    let progress = 0;
-    const SPEED = 0.025;
-    let pauseFrames = 0;
-
-    const animate = () => {
-      if (strokeIdx >= strokes.length) {
-        // 完了後1秒表示してクリア
-        setTimeout(() => {
-          gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          gctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-          setIsAnimating(false);
-        }, 1200);
-        return;
-      }
-
-      if (pauseFrames > 0) {
-        pauseFrames--;
-        animFrameRef.current = requestAnimationFrame(animate);
-        return;
-      }
-
-      // ガイドキャンバスをクリアして全ストロークを再描画
-      gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      gctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-      // 完了済みストローク（薄い青）
-      for (let i = 0; i < strokeIdx; i++) {
-        drawStrokePath(gctx, strokes[i], 1, "#93c5fd", 5);
-      }
-      // 現在のストローク（濃い青）
-      drawStrokePath(gctx, strokes[strokeIdx], progress, "#2563eb", 7);
-
-      // 現在のストロークの番号を先頭に表示
-      const startPt = strokes[strokeIdx][0];
-      gctx.fillStyle = "#2563eb";
-      gctx.beginPath();
-      gctx.arc(startPt.x, startPt.y, 14, 0, Math.PI * 2);
-      gctx.fill();
-      gctx.fillStyle = "#ffffff";
-      gctx.font = "bold 16px sans-serif";
-      gctx.textAlign = "center";
-      gctx.textBaseline = "middle";
-      gctx.fillText(String(strokeIdx + 1), startPt.x, startPt.y);
-
-      progress += SPEED;
-      if (progress >= 1) {
-        progress = 0;
-        strokeIdx++;
-        pauseFrames = 15;
-      }
-
-      animFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-  }, [isAnimating, strokes]);
-
   return (
     <div className="flex items-center gap-8 w-full max-w-4xl">
       <div className="flex flex-col items-center gap-4 flex-shrink-0">
@@ -621,17 +486,6 @@ function KakikataGame({
           「{question.char}」を かこう！
           <SpeakButton text={question.char} />
         </p>
-        <button
-          onClick={playDemo}
-          disabled={isAnimating}
-          className={`text-xl font-bold py-2 px-6 rounded-full active:scale-95 transition-transform ${
-            isAnimating
-              ? "bg-blue-200 text-blue-400"
-              : "bg-blue-100 text-blue-600 active:bg-blue-200"
-          }`}
-        >
-          おてほん
-        </button>
         <button
           onClick={clearCanvas}
           className="bg-gray-100 text-gray-500 text-xl font-bold py-2 px-6 rounded-full active:scale-95 transition-transform"
@@ -667,7 +521,7 @@ function KakikataGame({
           </span>
         </div>
         {/* Stroke order numbers (常時表示) */}
-        {!isAnimating && strokes.map((stroke, i) => (
+        {strokes.map((stroke, i) => (
           <div
             key={i}
             className="absolute z-[5] pointer-events-none flex items-center justify-center"
@@ -683,15 +537,6 @@ function KakikataGame({
             </div>
           </div>
         ))}
-        {/* Guide canvas for animation */}
-        <canvas
-          ref={guideCanvasRef}
-          style={{
-            width: CANVAS_SIZE,
-            height: CANVAS_SIZE,
-          }}
-          className="absolute inset-0 z-[6] pointer-events-none rounded-3xl"
-        />
         {/* Drawing canvas */}
         <canvas
           ref={canvasRef}
